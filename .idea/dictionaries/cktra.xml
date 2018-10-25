@@ -2,6 +2,7 @@
   <dictionary name="cktra">
     <words>
       <w>firebase</w>
+      <w>signout</w>
     </words>
   </dictionary>
 </component>
