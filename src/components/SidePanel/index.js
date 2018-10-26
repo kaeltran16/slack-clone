@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu } from 'semantic-ui-react';
+import Channel from './Channel';
 import UserPanel from './UserPanel';
 
 class SidePanel extends React.Component {
@@ -10,6 +11,7 @@ class SidePanel extends React.Component {
            fontSize: '1.4em'
         }}>
            <UserPanel/>
+           <Channel/>
         </Menu>
       );
    }
