@@ -27,10 +27,12 @@ class Channel extends React.Component {
       this.state.channelsRef.off();
    };
 
+
    setFirstChannel = () => {
       const { firstLoad, channels } = this.state;
 
       if (firstLoad && channels.length > 0) {
+         console.log(channels[0]);
          this.props.setCurrentChannel(channels[0]);
          this.setActiveChannel(channels[0]);
       }
@@ -90,6 +92,7 @@ class Channel extends React.Component {
    };
 
    setActiveChannel = channel => {
+      console.log(channel);
       this.setState({ activeChannel: channel.id });
    };
 
