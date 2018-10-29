@@ -13,6 +13,8 @@ class Messages extends React.Component {
       messageLoading: true,
       loadedMessages: []
    };
+
+
    addListeners = channelId => {
       this.addMessageListener(channelId);
    };
