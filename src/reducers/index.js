@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { SET_USER, CLEAR_USER, SET_CURRENT_CHANNEL } from '../actions/types';
+import { SET_USER, CLEAR_USER, SET_CURRENT_CHANNEL, SET_PRIVATE_CHANNEL } from '../actions/types';
 
 const initialState = {
    currentUser: null,
@@ -10,7 +10,6 @@ const userReducer = (state = initialState, action) => {
    switch (action.type) {
       case SET_USER:
          return {
-            ...state,
             currentUser: action.payload.currentUser,
             isLoading: false
          };
@@ -25,7 +24,8 @@ const userReducer = (state = initialState, action) => {
 };
 
 const initialChannelState = {
-   currentChannel: null
+   currentChannel: null,
+   isPrivateChannel: false
 };
 
 const channelReducer = (state = initialChannelState, action) => {
@@ -35,10 +35,16 @@ const channelReducer = (state = initialChannelState, action) => {
             ...state,
             currentChannel: action.payload.currentChannel
          };
+      case SET_PRIVATE_CHANNEL:
+         return {
+            ...state,
+            isPrivateChannel: action.payload.isPrivateChannel
+         };
       default:
          return state;
    }
 };
+
 
 const rootReducer = combineReducers({
    user: userReducer,

@@ -17,21 +17,24 @@ import Spinner from './Spinner';
 const store = createStore(rootReducer, composeWithDevTools());
 
 class Root extends React.Component {
+
    componentDidMount() {
       firebase.auth()
         .onAuthStateChanged(user => {
+           const { setUser, history, clearUser } = this.props;
            if (user) {
-              this.props.setUser(user);
-              this.props.history.push('/');
+              setUser(user);
+              history.push('/');
            } else {
-              this.props.history.push('/login');
-              this.props.clearUser();
+              history.push('/login');
+              clearUser();
            }
         });
    }
 
    render() {
-      return this.props.isLoading ? <Spinner/> : (
+      const { isLoading } = this.props;
+      return isLoading ? <Spinner/> : (
         <Switch>
            <Route exact path='/' component={App}/>
            <Route path='/login' component={Login}/>

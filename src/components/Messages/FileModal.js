@@ -1,8 +1,15 @@
 import mime from 'mime-types';
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Modal, Input, Button, Icon } from 'semantic-ui-react';
 
 class FileModal extends React.Component {
+   static propTypes = {
+      upload: PropTypes.func.isRequired,
+      closeModal: PropTypes.func.isRequired,
+      modal: PropTypes.bool.isRequired
+   };
+
    state = {
       file: null,
       authorized: ['image/jpge', 'image/png']
@@ -30,7 +37,10 @@ class FileModal extends React.Component {
 
    clearFile = () => this.setState({ file: null });
 
-   isAuthorized = fileName => this.state.authorized.includes(mime.lookup(fileName));
+   isAuthorized = fileName => {
+      const { authorized } = this.state;
+      return authorized.includes(mime.lookup(fileName));
+   };
 
    render() {
       const { modal, closeModal } = this.props;
@@ -40,15 +50,17 @@ class FileModal extends React.Component {
               Select an image file
            </Modal.Header>
            <Modal.Content>
-              <Input fluid label={'File types: jpg, png'} name={'file'} type={'file'}
+              <Input fluid label='File types: jpg, png' name='file' type='file'
                      onChange={this.addFile}/>
            </Modal.Content>
            <Modal.Actions>
-              <Button color={'green'} inverted onClick={this.sendFile}>
-                 <Icon name={'checkmark'}/> Send
+              <Button color='green' inverted onClick={this.sendFile}>
+                 <Icon name='checkmark'/>
+                 {` Send`}
               </Button>
-              <Button color={'red'} inverted onClick={closeModal}>
-                 <Icon name={'remove'}/> Cancel
+              <Button color='red' inverted onClick={closeModal}>
+                 <Icon name='remove'/>
+                 {` Cancel`}
               </Button>
            </Modal.Actions>
         </Modal>

@@ -7,7 +7,7 @@ import MetaPanel from './MetaPanel';
 import SidePanel from './SidePanel';
 
 const App = () => (
-  <Grid columns={'equal'} className={'app'} style={{ background: '#eee' }}>
+  <Grid columns='equal' className='app' style={{ background: '#eee' }}>
      <ColorPanel/>
      <SidePanel/>
      <Grid.Column style={{ marginLeft: 320 }}>

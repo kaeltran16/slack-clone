@@ -16,10 +16,8 @@ class Login extends React.Component {
       this.setState({ [event.target.name]: event.target.value });
    };
 
-   handleInputError = (errors, inputName) => {
-      return errors.some(err => err.message.toLowerCase()
-        .includes(inputName)) ? 'error' : '';
-   };
+   handleInputError = (errors, inputName) => (errors.some(err => err.message.toLowerCase()
+     .includes(inputName)) ? 'error' : '');
 
    handleSubmit = event => {
       event.preventDefault();
@@ -31,50 +29,50 @@ class Login extends React.Component {
          const { email, password } = this.state;
          firebase.auth()
            .signInWithEmailAndPassword(email, password)
-           .then((signedInUser) => {
-              console.log(signedInUser);
+           .then(() => {
               this.setState({ loading: false });
            })
            .catch(err => {
+              const { errors } = this.state;
               this.setState({
-                 errors: this.state.errors.concat(err),
+                 errors: errors.concat(err),
                  loading: false
               });
            });
       }
    };
 
-   isFormValid = ({ email, password }) => {
-      return email && password;
-   };
+   isFormValid = ({ email, password }) => email && password;
 
 
-   displayErrors = errors => errors.map((error, i) => <p key={i}>{error.message}</p>);
+   displayErrors = errors => errors.map(error => <p key={error.code}>{error.message}</p>);
 
    render() {
       const { email, password, errors, loading } = this.state;
       return (
-        <Grid textAlign={'center'} verticalAlign={'middle'} className={'app'}>
+        <Grid textAlign='center' verticalAlign='middle' className='app'>
            <Grid.Column style={{ maxWidth: 450 }}>
-              <Header as={'h1'} icon color={'violet'} textAlign={'center'}>
-                 <Icon name={'code branch'} color={'violet'}/>
-                 Login for DevChat
+              <Header as='h1' icon color='violet' textAlign='center'>
+                 <Icon name='code branch' color='violet'/>
+                 {`Login for DevChat`}
               </Header>
-              <Form size={'large'} onSubmit={this.handleSubmit}>
+              <Form size='large' onSubmit={this.handleSubmit}>
                  <Segment stacked>
 
-                    <Form.Input fluid name={'email'} icon={'mail'} iconPosition={'left'}
-                                placeholder={'Email address'} onChange={this.handleChange}
-                                type={'email'} value={email}
+                    <Form.Input fluid name='email' icon='mail' iconPosition='left'
+                                placeholder='Email address' onChange={this.handleChange}
+                                type='email' value={email}
                                 className={this.handleInputError(errors, 'email')}/>
 
-                    <Form.Input fluid name={'password'} icon={'lock'} iconPosition={'left'}
-                                placeholder={'Password'} onChange={this.handleChange}
-                                type={'password'} value={password}
+                    <Form.Input fluid name='password' icon='lock' iconPosition='left'
+                                placeholder='Password' onChange={this.handleChange}
+                                type='password' value={password}
                                 className={this.handleInputError(errors, 'password')}/>
 
-                    <Button disabled={loading} className={loading ? 'loading' : ''} type={'submit'}
-                            color={'violet'} fluid size={'large'}>Submit</Button>
+                    <Button disabled={loading} className={loading ? 'loading' : ''} type='submit'
+                            color='violet' fluid size='large'>
+                       {`Submit`}
+                    </Button>
                  </Segment>
               </Form>
               {errors.length > 0 && (
@@ -83,7 +81,10 @@ class Login extends React.Component {
                    {this.displayErrors(errors)}
                 </Message>
               )}
-              <Message>Don't have a account? <Link to={'/register'}>Register</Link></Message>
+              <Message>
+                 {`Don't have a account?`}
+                 <Link to='/register'>Register</Link>
+              </Message>
            </Grid.Column>
         </Grid>
       );

@@ -1,7 +1,7 @@
 import React from 'react';
 import connect from 'react-redux/es/connect/connect';
 import { Menu, Icon, Modal, Form, Input, Button } from 'semantic-ui-react';
-import { setCurrentChannel } from '../../actions';
+import { setCurrentChannel, setPrivateChannel } from '../../actions';
 import firebase from '../../firebase';
 
 class Channel extends React.Component {
@@ -32,7 +32,6 @@ class Channel extends React.Component {
       const { firstLoad, channels } = this.state;
 
       if (firstLoad && channels.length > 0) {
-         console.log(channels[0]);
          this.props.setCurrentChannel(channels[0]);
          this.setActiveChannel(channels[0]);
       }
@@ -74,7 +73,6 @@ class Channel extends React.Component {
               channelDetail: ''
            });
            this.closeModal();
-           console.log('channel added');
         })
         .catch(err => console.log(err));
    };
@@ -88,11 +86,12 @@ class Channel extends React.Component {
    };
    changeChannel = channel => {
       this.setActiveChannel(channel);
-      this.props.setCurrentChannel(channel);
+      const { setCurrentChannel, setPrivateChannel } = this.props;
+      setCurrentChannel(channel);
+      setPrivateChannel(false);
    };
 
    setActiveChannel = channel => {
-      console.log(channel);
       this.setState({ activeChannel: channel.id });
    };
 
@@ -108,7 +107,7 @@ class Channel extends React.Component {
       const { channels, modal } = this.state;
       return (
         <React.Fragment>
-           <Menu.Menu style={{ paddingBottom: '2em' }}>
+           <Menu.Menu className={'menu'}>
               <Menu.Item>
                <span>
                   <Icon name='exchange'/> CHANNELS
@@ -155,4 +154,7 @@ const mapStateToProps = ({ user }) => ({
    currentUser: user.currentUser
 });
 
-export default connect(mapStateToProps, { setCurrentChannel })(Channel);
+export default connect(mapStateToProps, {
+   setCurrentChannel,
+   setPrivateChannel
+})(Channel);

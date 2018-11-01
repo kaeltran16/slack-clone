@@ -1,11 +1,22 @@
-import firebase from 'firebase';
+import PropTypes from 'prop-types';
 import React from 'react';
+import { connect } from 'react-redux';
 import { Segment, Button, Input } from 'semantic-ui-react';
 import uuid from 'uuid/v4';
+import firebase from '../../firebase';
 import FileModal from './FileModal';
 import ProgressBar from './ProgressBar';
 
 class MessageForm extends React.Component {
+   static defaultProps = {
+      currentChannel: null
+   };
+
+   static propTypes = {
+      currentUser: PropTypes.object.isRequired,
+      currentChannel: PropTypes.object
+   };
+
    state = {
       storageRef: firebase.storage()
         .ref(),
@@ -29,7 +40,7 @@ class MessageForm extends React.Component {
 
    createMessage = (fileUrl = null) => {
       const { currentUser } = this.props;
-      const message = {
+      const newMessage = {
          timestamp: firebase.database.ServerValue.TIMESTAMP,
          user: {
             id: currentUser.uid,
@@ -39,21 +50,23 @@ class MessageForm extends React.Component {
       };
 
       if (fileUrl !== null) {
-         message.image = fileUrl;
+         newMessage.image = fileUrl;
       } else {
-         message.content = this.state.message;
+         const { message } = this.state;
+         newMessage.content = message;
       }
 
-      return message;
+      return newMessage;
    };
 
 
    sendMessage = () => {
-      const { messages, currentChannel } = this.props;
+      const { getMessagesRef, currentChannel } = this.props;
       const { message } = this.state;
       if (message) {
          this.setState({ loading: true });
-         messages.child(currentChannel.id)
+         getMessagesRef()
+           .child(currentChannel.id)
            .push()
            .set(this.createMessage())
            .then(() => {
@@ -64,46 +77,53 @@ class MessageForm extends React.Component {
               });
            })
            .catch(err => {
-              console.log(err);
+              const { errors } = this.state;
               this.setState({
                  loading: false,
-                 errors: this.state.errors.concat(err)
+                 errors: errors.concat(err)
               });
            });
       } else {
-         this.setState({ errors: this.state.errors.concat({ message: 'Add a message' }) });
+         const { errors } = this.state;
+         this.setState({ errors: errors.concat({ message: 'Add a message' }) });
       }
    };
 
+   getPath = () => {
+      const { isPrivateChannel, currentChannel } = this.props;
+      return isPrivateChannel ? `chat/private-${currentChannel.id}`
+        : 'chat/public';
+   };
+
    uploadFile = (file, metadata) => {
-      const pathToUpload = this.props.currentChannel.id;
-      const { messages } = this.props;
-      const filePath = `chat/public/${uuid()}.jpg`;
-      console.log(filePath);
+      const { storageRef, errors } = this.state;
+      const { currentChannel, getMessagesRef } = this.props;
+      const ref = getMessagesRef();
+      const pathToUpload = currentChannel.id;
+      const filePath = `${this.getPath()}/${uuid()}.jpg`;
       this.setState({
          uploadState: 'uploading',
-         uploadTask: this.state.storageRef.child(filePath)
+         uploadTask: storageRef.child(filePath)
            .put(file, metadata)
       }, () => {
-         this.state.uploadTask.on('state_changed', snap => {
+         const { uploadTask } = this.state;
+         uploadTask.on('state_changed', snap => {
             const percentage = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
             this.setState({ uploadPercent: percentage });
          }, err => {
-            console.log(err);
             this.setState({
-               errors: this.state.errors.concat(err),
+               errors: errors.concat(err),
                uploadState: 'error',
                uploadTask: null
             });
          }, () => {
-            this.state.uploadTask.snapshot.ref.getDownloadURL()
+            uploadTask.snapshot.ref.getDownloadURL()
               .then(url => {
-                 this.sendFileMessage(url, messages, pathToUpload);
+                 this.sendFileMessage(url, ref, pathToUpload);
               })
               .catch(err => {
-                 console.log(err);
                  this.setState({
-                    errors: this.state.errors.concat(err),
+                    errors: errors.concat(err),
                     uploadState: 'error',
                     uploadTask: null
                  });
@@ -120,9 +140,9 @@ class MessageForm extends React.Component {
            this.setState({ uploadState: 'done' });
         })
         .catch(err => {
-           console.log(err);
+           const { errors } = this.state;
            this.setState({
-              errors: this.state.errors.concat(err)
+              errors: errors.concat(err)
            });
         });
    };
@@ -130,17 +150,18 @@ class MessageForm extends React.Component {
    render() {
       const { errors, message, loading, modal, uploadState, uploadPercent } = this.state;
       return (
-        <Segment className={'message__form'}>
-           <Input fluid name={'message'} style={{ marginBottom: '0.7em' }}
-                  label={<Button icon={'add'}/>} labelPosition={'left'}
-                  placeholder={'Write your message'} onChange={this.handleChange}
+        <Segment className='message__form'>
+           <Input fluid name='message' style={{ marginBottom: '0.7em' }}
+                  label={<Button icon='add'/>} labelPosition='left'
+                  placeholder='Write your message' onChange={this.handleChange}
                   className={errors.some(err => err.message.includes('message')) ? 'error' : ''}
                   value={message}/>
-           <Button.Group icon widths={'2'}>
-              <Button color={'orange'} content={'Add Reply'} labelPosition={'left'} icon={'edit'}
+           <Button.Group icon widths='2'>
+              <Button color='orange' content='Add Reply' labelPosition='left' icon='edit'
                       onClick={this.sendMessage} disabled={loading}/>
-              <Button color={'teal'} content={'Upload media'} labelPosition={'right'}
-                      icon={'cloud upload'} onClick={this.openModal}/>
+              <Button color='teal' disabled={uploadState === 'uploading'}
+                      content='Upload media' labelPosition='right'
+                      icon='cloud upload' onClick={this.openModal}/>
            </Button.Group>
            <FileModal modal={modal} closeModal={this.closeModal} upload={this.uploadFile}/>
            <ProgressBar uploadState={uploadState} percentage={uploadPercent}/>
@@ -149,5 +170,10 @@ class MessageForm extends React.Component {
    }
 }
 
+const mapStateToProps = state => ({
+   currentChannel: state.channel.currentChannel,
+   currentUser: state.user.currentUser,
+   isPrivateChannel: state.channel.isPrivateChannel
+});
 
-export default MessageForm;
+export default connect(mapStateToProps)(MessageForm);
