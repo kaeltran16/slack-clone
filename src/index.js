@@ -20,26 +20,26 @@ class Root extends React.Component {
 
    componentDidMount() {
       firebase.auth()
-        .onAuthStateChanged(user => {
-           const { setUser, history, clearUser } = this.props;
-           if (user) {
-              setUser(user);
-              history.push('/');
-           } else {
-              history.push('/login');
-              clearUser();
-           }
-        });
+         .onAuthStateChanged(user => {
+            const { setUser, history, clearUser } = this.props;
+            if (user && user.displayName) {
+               setUser(user);
+               history.push('/');
+            } else {
+               history.push('/login');
+               clearUser();
+            }
+         });
    }
 
    render() {
       const { isLoading } = this.props;
-      return isLoading ? <Spinner/> : (
-        <Switch>
-           <Route exact path='/' component={App}/>
-           <Route path='/login' component={Login}/>
-           <Route path='/register' component={Register}/>
-        </Switch>
+      return isLoading ? <Spinner /> : (
+         <Switch>
+            <Route exact path='/' component={App} />
+            <Route path='/login' component={Login} />
+            <Route path='/register' component={Register} />
+         </Switch>
       );
    }
 }
@@ -54,11 +54,11 @@ const RootWithAuth = withRouter(connect(mapStateToProps, {
 })(Root));
 
 ReactDOM.render(
-  <Provider store={store}>
-     <BrowserRouter>
-        <RootWithAuth/>
-     </BrowserRouter>
-  </Provider>, document.getElementById('root'));
+   <Provider store={store}>
+      <BrowserRouter>
+         <RootWithAuth />
+      </BrowserRouter>
+   </Provider>, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

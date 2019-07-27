@@ -9,11 +9,11 @@ class DirectMessages extends React.Component {
       activeChannel: '',
       users: [],
       userRef: firebase.database()
-        .ref('users'),
+         .ref('users'),
       connectedRef: firebase.database()
-        .ref('.info/connected'),
+         .ref('.info/connected'),
       presenceRef: firebase.database()
-        .ref('presences')
+         .ref('presences')
    };
 
    addListeners = id => {
@@ -22,6 +22,7 @@ class DirectMessages extends React.Component {
       userRef.on('child_added', snap => {
          if (id !== snap.key) {
             let user = snap.val();
+
             user.uid = snap.key;
             user.status = 'offline';
             loadedUsers.push(user);
@@ -33,10 +34,10 @@ class DirectMessages extends React.Component {
          if (snap.val()) {
             const ref = presenceRef.child(id);
             ref.set(true)
-              .catch(err => console.log(err));
+               .catch(err => console.log(err));
             ref.onDisconnect()
-              .remove()
-              .catch(err => console.log(err));
+               .remove()
+               .catch(err => console.log(err));
          }
       });
 
@@ -52,6 +53,12 @@ class DirectMessages extends React.Component {
          }
       });
 
+   };
+
+   removeListeners = () => {
+      this.state.userRef.off();
+      this.state.presenceRef.off();
+      this.state.connectedRef.off();
    };
 
    addStatusToUser = (id, connected = true) => {
@@ -83,7 +90,7 @@ class DirectMessages extends React.Component {
       const { user } = this.props;
       const currentUserId = user.uid;
       return userId < currentUserId ? `${userId}/${currentUserId}`
-        : `${currentUserId}/${userId}`;
+         : `${currentUserId}/${userId}`;
    };
 
    setActiveChannel = userId => {
@@ -97,26 +104,30 @@ class DirectMessages extends React.Component {
       }
    }
 
+   componentWillUnmount() {
+      this.removeListeners();
+   }
+
    render() {
       const { users, activeChannel } = this.state;
       return (
-        <Menu.Menu className={'menu'}>
-           <Menu.Item>
-              <span>
-                 <Icon name={'mail'}/>DIRECT MESSAGES
+         <Menu.Menu className={'menu'}>
+            <Menu.Item>
+               <span>
+                  <Icon name={'mail'} />DIRECT MESSAGES
               </span>{' '}({users.length})
            </Menu.Item>
-           {users.map(user => (
-             <Menu.Item active={user.uid === activeChannel} key={user.uid}
-                        onClick={() => this.changeChannel(user)} style={{
-                opacity: 0.7,
-                fontStyle: 'italic'
-             }}>
-                <Icon name={'circle'} color={this.isUserOnline(user) ? 'green' : 'red'}/>
-                @ {user.name}
-             </Menu.Item>
-           ))}
-        </Menu.Menu>
+            {users.map(user => (
+               <Menu.Item active={user.uid === activeChannel} key={user.uid}
+                  onClick={() => this.changeChannel(user)} style={{
+                     opacity: 0.7,
+                     fontStyle: 'italic'
+                  }}>
+                  <Icon name={'circle'} color={this.isUserOnline(user) ? 'green' : 'red'} />
+                  @ {user.name}
+               </Menu.Item>
+            ))}
+         </Menu.Menu>
       );
    }
 }
