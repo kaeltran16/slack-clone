@@ -7,7 +7,7 @@ import Spinner from '../../Spinner';
 import MessageForm from './MessageForm';
 import MessageHeader from './MessageHeader';
 import MessageItem from './MessageItem';
-
+import { setUserPosts } from '../../actions';
 class Messages extends React.Component {
   static defaultProps = {
     currentChannel: null
@@ -107,10 +107,11 @@ class Messages extends React.Component {
     ref.child(channelId).on('child_added', snap => {
       loadedMessages.push(snap.val());
       this.countUniqueUsers(loadedMessages);
-    });
-    this.setState({
-      loadedMessages,
-      messageLoading: false
+      this.setState({
+        loadedMessages,
+        messageLoading: false
+      });
+      this.countUserPosts(loadedMessages);
     });
   };
 
@@ -118,6 +119,22 @@ class Messages extends React.Component {
     const { messageRef, privateMessagesRef } = this.state;
     const { isPrivateChannel } = this.props;
     return isPrivateChannel ? privateMessagesRef : messageRef;
+  };
+
+  countUserPosts = messages => {
+    let userPosts = messages.reduce((acc, message) => {
+      if (message.user.name in acc) {
+        acc[message.user.name].count += 1;
+      } else {
+        acc[message.user.name] = {
+          avatar: message.user.avatar,
+          count: 1
+        };
+      }
+      return acc;
+    }, {});
+
+    this.props.setUserPosts(userPosts);
   };
 
   handleSearchChange = event => {
@@ -214,4 +231,7 @@ const mapStateToProps = state => ({
   isPrivateChannel: state.channel.isPrivateChannel
 });
 
-export default connect(mapStateToProps)(Messages);
+export default connect(
+  mapStateToProps,
+  { setUserPosts }
+)(Messages);
