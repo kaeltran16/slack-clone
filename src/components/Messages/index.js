@@ -8,6 +8,7 @@ import MessageForm from './MessageForm';
 import MessageHeader from './MessageHeader';
 import MessageItem from './MessageItem';
 import { setUserPosts } from '../../actions';
+import Typing from './Typing';
 class Messages extends React.Component {
   static defaultProps = {
     currentChannel: null
@@ -21,6 +22,9 @@ class Messages extends React.Component {
   state = {
     messageRef: firebase.database().ref('messages'),
     privateMessagesRef: firebase.database().ref('privateMessages'),
+    usersRef: firebase.database().ref('users'),
+    typingRef: firebase.database().ref('typing'),
+    connectedRef: firebase.database().ref('.info/connected'),
     messageLoading: true,
     loadedMessages: [],
     numUniqueUsers: 0,
@@ -28,7 +32,7 @@ class Messages extends React.Component {
     searchTerm: '',
     searchLoading: false,
     searchResults: [],
-    usersRef: firebase.database().ref('users')
+    typingUsers: []
   };
 
   componentDidUpdate(prevProps) {
@@ -99,7 +103,48 @@ class Messages extends React.Component {
     return channel ? `${isPrivateChannel ? '@' : '#'}${channel.name}` : '';
   };
 
-  addListeners = channelId => this.addMessageListener(channelId);
+  addListeners = channelId => {
+    this.addMessageListener(channelId);
+    this.addTypingListeners(channelId);
+  };
+
+  addTypingListeners = channelId => {
+    let typingUsers = [];
+    const { typingRef, connectedRef } = this.state;
+    const { currentUser } = this.props;
+    typingRef.child(channelId).on('child_added', snap => {
+      if (snap.key !== currentUser.uid) {
+        typingUsers = typingUsers.concat({
+          id: snap.key,
+          name: snap.val()
+        });
+        this.setState({ typingUsers });
+      }
+    });
+
+    typingRef.child(channelId).on('child_removed', snap => {
+      const index = typingUsers.findIndex(user => user.id === snap.key);
+
+      if (index !== -1) {
+        typingUsers = typingUsers.filter(user => user.id !== snap.key);
+        this.setState({ typingUsers });
+      }
+    });
+
+    connectedRef.on('value', snap => {
+      if (snap.val()) {
+        typingRef
+          .child(channelId)
+          .child(currentUser.uid)
+          .onDisconnect()
+          .remove(err => {
+            if (err) {
+              console.log(err);
+            }
+          });
+      }
+    });
+  };
 
   addMessageListener = channelId => {
     const loadedMessages = [];
@@ -185,6 +230,18 @@ class Messages extends React.Component {
     }
   };
 
+  displayTypingUsers = users =>
+    users.length > 0 &&
+    users.map(user => (
+      <div
+        style={{ display: 'flex', alignItems: 'center', marginBottom: '.2em' }}
+        key={user.id}
+      >
+        <span className="user__typing">{user.name} is typing</span>
+        <Typing />
+      </div>
+    ));
+
   render() {
     const {
       loadedMessages,
@@ -193,7 +250,8 @@ class Messages extends React.Component {
       searchTerm,
       searchResults,
       searchLoading,
-      isChannelStarred
+      isChannelStarred,
+      typingUsers
     } = this.state;
     const { currentChannel, isPrivateChannel } = this.props;
     return (
@@ -217,6 +275,7 @@ class Messages extends React.Component {
             ) : (
               this.displayMessages(loadedMessages)
             )}
+            {this.displayTypingUsers(typingUsers)}
           </Comment.Group>
         </Segment>
         <MessageForm getMessagesRef={this.getMessagesRef} />
