@@ -61,7 +61,6 @@ class Channel extends React.Component {
       }
       notifications[index].lastKnownTotal = snap.numChildren();
     } else {
-      console.log('ya');
       notifications.push({
         id: channelId,
         total: snap.numChildren(),
@@ -158,23 +157,25 @@ class Channel extends React.Component {
 
   clearNotifications = () => {
     let index = this.state.notifications.findIndex(
-      noti => noti.id === this.state.channel.id
+      notification => notification.id === this.state.channel.id
     );
 
     if (index !== -1) {
-      let updatedNoti = [...this.state.notifications];
-      updatedNoti[index].total = this.state.notifications[index].lastKnownTotal;
-      updatedNoti[index].count = 0;
-      this.setState({ notifications: updatedNoti });
+      let updatedNotification = [...this.state.notifications];
+      updatedNotification[index].total = this.state.notifications[
+        index
+      ].lastKnownTotal;
+      updatedNotification[index].count = 0;
+      this.setState({ notifications: updatedNotification });
     }
   };
 
   getNotificationCount = channel => {
     let count = 0;
 
-    this.state.notifications.forEach(noti => {
-      if (noti.id === channel.id) {
-        count = noti.count;
+    this.state.notifications.forEach(notification => {
+      if (notification.id === channel.id) {
+        count = notification.count;
       }
     });
 
