@@ -3,12 +3,12 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Segment, Comment } from 'semantic-ui-react';
 import firebase from '../../firebase';
-import Spinner from '../../Spinner';
 import MessageForm from './MessageForm';
 import MessageHeader from './MessageHeader';
 import MessageItem from './MessageItem';
 import { setUserPosts } from '../../actions';
 import Typing from './Typing';
+import { MessageSkeleton } from '../Skeletons';
 class Messages extends React.Component {
   static defaultProps = {
     currentChannel: null
@@ -32,17 +32,26 @@ class Messages extends React.Component {
     searchTerm: '',
     searchLoading: false,
     searchResults: [],
-    typingUsers: []
+    typingUsers: [],
+    listeners: []
   };
 
   componentDidUpdate(prevProps) {
-    const { currentChannel, currentUser } = this.props;
+    const { currentChannel, currentUser, listeners } = this.props;
     if (currentChannel !== prevProps.currentChannel) {
       if (currentUser && currentChannel) {
+        this.removeListeners(listeners);
         this.addListeners(currentChannel.id);
         this.addUserStarsListener(currentChannel.id, currentUser.uid);
       }
     }
+    if (this.messagesEnd) {
+      this.scrollToBottom();
+    }
+  }
+
+  scrollToBottom() {
+    this.messagesEnd.scrollIntoView({ behavior: 'smooth' });
   }
 
   handleSearchMessages = () => {
@@ -72,6 +81,19 @@ class Messages extends React.Component {
           this.setState({ isChannelStarred: isPreviouslyStarred });
         }
       });
+  };
+
+  addToListeners = (id, ref, event) => {
+    const { listeners } = this.state;
+    const index = listeners.findIndex(
+      listener =>
+        listener.id === id && listener.ref === ref && listener.event === event
+    );
+
+    if (index === -1) {
+      const newListener = { id, ref, event };
+      this.setState({ listeners: listeners.concat(newListener) });
+    }
   };
 
   countUniqueUsers = messages => {
@@ -108,6 +130,12 @@ class Messages extends React.Component {
     this.addTypingListeners(channelId);
   };
 
+  removeListeners = listeners => {
+    listeners.foreach(listener => {
+      listener.ref.child(listener.id).off(listener.event);
+    });
+  };
+
   addTypingListeners = channelId => {
     let typingUsers = [];
     const { typingRef, connectedRef } = this.state;
@@ -122,6 +150,8 @@ class Messages extends React.Component {
       }
     });
 
+    this.addToListeners(channelId, typingRef, 'child_added');
+
     typingRef.child(channelId).on('child_removed', snap => {
       const index = typingUsers.findIndex(user => user.id === snap.key);
 
@@ -130,6 +160,8 @@ class Messages extends React.Component {
         this.setState({ typingUsers });
       }
     });
+
+    this.addToListeners(channelId, typingRef, 'child_removed');
 
     connectedRef.on('value', snap => {
       if (snap.val()) {
@@ -158,6 +190,8 @@ class Messages extends React.Component {
       });
       this.countUserPosts(loadedMessages);
     });
+
+    this.addToListeners(channelId, ref, 'child_added');
   };
 
   getMessagesRef = () => {
@@ -242,6 +276,19 @@ class Messages extends React.Component {
       </div>
     ));
 
+  componentWillUnmount() {
+    this.removeListeners(this.state.listeners);
+    this.state.connectedRef.off();
+  }
+
+  displayMessageSkeleton = () => (
+    <React.Fragment>
+      {[...Array(10)].map((el, index) => (
+        <MessageSkeleton key={index} />
+      ))}
+    </React.Fragment>
+  );
+
   render() {
     const {
       loadedMessages,
@@ -268,14 +315,13 @@ class Messages extends React.Component {
 
         <Segment>
           <Comment.Group className="messages">
-            {messageLoading ? (
-              <Spinner />
-            ) : searchTerm ? (
-              this.displayMessages(searchResults)
-            ) : (
-              this.displayMessages(loadedMessages)
-            )}
+            {messageLoading
+              ? this.displayMessageSkeleton()
+              : searchTerm
+              ? this.displayMessages(searchResults)
+              : this.displayMessages(loadedMessages)}
             {this.displayTypingUsers(typingUsers)}
+            <div ref={node => (this.messagesEnd = node)} />
           </Comment.Group>
         </Segment>
         <MessageForm getMessagesRef={this.getMessagesRef} />

@@ -72,6 +72,12 @@ class ColorPanel extends React.Component {
     });
   };
 
+  removeListeners = () => {
+    const { userRef } = this.state;
+    const { user } = this.props;
+    userRef.child(`${user.uid}/colors`).off();
+  };
+
   displayUserColors = colors =>
     colors.length > 0 &&
     colors.map((color, index) => (
@@ -100,6 +106,10 @@ class ColorPanel extends React.Component {
     if (this.props.user) {
       this.addListeners(this.props.user.uid);
     }
+  }
+
+  componentWillUnmount() {
+    this.removeListeners();
   }
 
   render() {

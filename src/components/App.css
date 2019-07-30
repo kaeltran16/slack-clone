@@ -68,7 +68,6 @@ body,
   position: relative;
   padding: 10px;
   margin-left: 5px;
-  background: #e6e6e6;
   border-radius: 20px;
 }
 
@@ -106,5 +105,23 @@ body,
 
   100% {
     opacity: 0;
+  }
+}
+
+.emojiPicker {
+  position: absolute;
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(150%);
+  }
+
+  100% {
+    transform: translateX(-100%);
   }
 }
