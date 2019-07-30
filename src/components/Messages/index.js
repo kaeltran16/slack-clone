@@ -37,10 +37,10 @@ class Messages extends React.Component {
   };
 
   componentDidUpdate(prevProps) {
-    const { currentChannel, currentUser, listeners } = this.props;
+    const { currentChannel, currentUser } = this.props;
     if (currentChannel !== prevProps.currentChannel) {
       if (currentUser && currentChannel) {
-        this.removeListeners(listeners);
+        this.removeListeners(this.state.listeners);
         this.addListeners(currentChannel.id);
         this.addUserStarsListener(currentChannel.id, currentUser.uid);
       }
@@ -131,9 +131,11 @@ class Messages extends React.Component {
   };
 
   removeListeners = listeners => {
-    listeners.foreach(listener => {
-      listener.ref.child(listener.id).off(listener.event);
-    });
+    if (listeners) {
+      listeners.forEach(listener => {
+        listener.ref.child(listener.id).off(listener.event);
+      });
+    }
   };
 
   addTypingListeners = channelId => {
