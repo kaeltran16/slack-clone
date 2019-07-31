@@ -183,12 +183,22 @@ class Messages extends React.Component {
   addMessageListener = channelId => {
     const loadedMessages = [];
     const ref = this.getMessagesRef();
+    ref
+      .child(channelId)
+      .once('value')
+      .then(snap => {
+        this.setState({
+          loadedMessages,
+          messageLoading: false
+        });
+      });
+
+    this.addToListeners(channelId, ref, 'value');
     ref.child(channelId).on('child_added', snap => {
       loadedMessages.push(snap.val());
       this.countUniqueUsers(loadedMessages);
       this.setState({
-        loadedMessages,
-        messageLoading: false
+        loadedMessages
       });
       this.countUserPosts(loadedMessages);
     });
