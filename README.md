@@ -6,7 +6,7 @@
   * [Built With](#built-with)
 * [Getting Started](#getting-started)
   * [Installation](#installation)
-
+* [Usage](#usage)
 
 
 <!-- ABOUT THE PROJECT -->
@@ -36,5 +36,10 @@ npm install
 ```JS
 npm run start
 ```
+
+### Usage
+Login using: 
+- Email: test@gmail.com 
+- Password: 123456
 
 [product-screenshot]: https://res.cloudinary.com/medium-cloned/image/upload/q_auto/v1575321964/devchat.png
